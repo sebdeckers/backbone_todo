@@ -68,9 +68,10 @@ $(function(){
       return this.last().get('order') + 1;
     },
 
-    // Todos are sorted by their original insertion order.
+    // Todos are sorted by alphabetically by their message.
     comparator: function(todo) {
-      return todo.get('order');
+      console.log("comparator", todo.get('content'));
+      return todo.get('content');
     }
 
   });
@@ -182,11 +183,12 @@ $(function(){
     // collection, when items are added or changed. Kick things off by
     // loading any preexisting todos that might be saved in *localStorage*.
     initialize: function() {
-      _.bindAll(this, 'addOne', 'addAll', 'render');
+      _.bindAll(this, 'addOne', 'addAll', 'render', 'redraw', 'edited');
 
       this.input    = this.$("#new-todo");
 
-      Todos.bind('add',     this.addOne);
+      Todos.bind('change:content', this.edited);
+      Todos.bind('add',     this.redraw);
       Todos.bind('refresh', this.addAll);
       Todos.bind('all',     this.render);
 
@@ -237,6 +239,18 @@ $(function(){
     clearCompleted: function() {
       _.each(Todos.done(), function(todo){ todo.clear(); });
       return false;
+    },
+
+    // Flush the DOM and re-render the Collection.
+    redraw: function() {
+      this.$("#todo-list").html("");
+      this.addAll();
+    },
+
+    // Force a sort because we're doing alphabetical based on the content field.
+    edited: function(model) {
+      Todos.sort();
+      this.redraw();
     },
 
     // Lazily show the tooltip that tells you to press `enter` to save
